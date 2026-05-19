@@ -1,0 +1,59 @@
+name: "Test Ticket"
+description: Create a ticket for writing unit tests, integration tests, or QA verification.
+title: "[TEST]: <Short summary>"
+labels: ["documentation"]
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Testing Objective
+      description: What component, feature, or function needs to be tested?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: What part of the codebase is being tested?
+      options:
+        - CORE (Backend / Logic)
+        - GUI (Frontend / UI)
+        - BOTH
+    validations:
+      required: true
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Complexity / Story Points
+      description: Estimate the effort required to write and run these tests.
+      options:
+        - "1 (Easy / Simple assertion)"
+        - "3 (Medium / Basic feature tests)"
+        - "5 (Hard / Integration or heavy logic tests)"
+        - "8 (Very Hard / Entire module coverage)"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Test Scenarios Checklist
+      description: Select the paths that need to be covered in this ticket.
+      options:
+        - label: Happy Path (Expected inputs yield expected outputs)
+          required: true
+        - label: Edge Cases / Error Handling (Empty values, nulls, invalid inputs)
+          required: false
+        - label: Boundary Values
+          required: false
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: How do we know the testing is complete?
+      placeholder: E.g., Code coverage reaches 80% or manual UI testing passes on all screens.
+    validations:
+      required: true
