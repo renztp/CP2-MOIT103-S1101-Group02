@@ -1,37 +1,37 @@
-name: "New Feature"
+name: "🚀 New Feature"
 description: Propose a new idea, feature, or enhancement for the project.
 title: "[FEATURE]: <Short summary>"
-labels: [ "enhancement" ]
+labels: ["enhancement"]
 body:
   - type: textarea
     id: description
     attributes:
-    label: Feature Description
-    description: A clear and concise description of what the new feature is.
+      label: Feature Description
+      description: A clear and concise description of what the new feature is.
     validations:
-    required: true
+      required: true
 
   - type: dropdown
     id: scope
     attributes:
-    label: Scope
-    description: Where will this feature be implemented?
-    options:
-      - CORE (Backend / Logic)
-      - GUI (Frontend / UI)
-      - BOTH
+      label: Scope
+      description: Where will this feature be implemented?
+      options:
+        - CORE (Backend / Logic)
+        - GUI (Frontend / UI)
+        - BOTH
     validations:
-    required: true
+      required: true
 
   - type: dropdown
     id: complexity
     attributes:
-    label: Complexity / Story Points
-    description: Estimate the effort required to build this feature.
-    options:
-      - "1 (Easy / Quick addition)"
-      - "3 (Medium / Minor feature)"
-      - "5 (Hard / Major feature)"
-      - "8 (Very Hard / Core system change)"
+      label: Complexity / Story Points
+      description: Estimate the effort required to build this feature.
+      options:
+        - "1 (Easy / Quick addition)"
+        - "3 (Medium / Minor feature)"
+        - "5 (Hard / Major feature)"
+        - "8 (Very Hard / Core system change)"
     validations:
-    required: true
+      required: true
