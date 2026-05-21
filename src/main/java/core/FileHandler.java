@@ -7,13 +7,21 @@ import java.util.List;
 public class FileHandler {
     static final int COL_HOURLY_RATE = 18;
 
-    // TODO: replace soon for Employee/AttendanceRecord classes and refactor code
+    // TODO: replace for Employee/AttendanceRecord classes and refactor code
     private String[][] employees;
     private String[][] attendance;
 
     public FileHandler() throws IOException {
         loadEmployeeRecords();
         loadAttendanceRecords();
+    }
+
+    private String removeQuotes(String column) {
+        return column.replace("\"", "").trim();
+    }
+
+    private String[] splitCSVLine(String line) {
+        return line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
     }
 
     private void loadEmployeeRecords() throws IOException {
@@ -27,13 +35,14 @@ public class FileHandler {
                 if (header) { header = false; continue; } // Skip the column name row.
 
                 // Regex splits on commas that are NOT inside double-quote pairs.
-                String[] columns = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                String[] columns = splitCSVLine(line);
 
                 // Guard against malformed rows with too few columns.
                 if (columns.length < 19) continue;
 
+
                 for (int i = 0; i < columns.length; i++) {
-                    columns[i] = columns[i].replace("\"", "").trim();
+                    columns[i] = removeQuotes(columns[i]);
                 }
 
                 // Remove comma separators from the hourly rate field (e.g. "1,250" → "1250").
