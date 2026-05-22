@@ -1,11 +1,24 @@
 package core;
 
-import shared.CSVColumnIndex;
+import models.CSVColumnIndex;
 
 public class TimeKeeper {
-    public Map<Integer, double[]> processAttendance() {}
+    public int getYearFromAttendance(String[][] attendance, String employeeId) {
+        for (String[] row : attendance) {
+            if (!row[CSVColumnIndex.ATT_EMP_ID].trim().equals(employeeId)) continue;
+            String[] parts = row[CSVColumnIndex.ATT_DATE].split("/");
+            if (parts.length >= 3) {
+                return Integer.parseInt(parts[2].trim());
+            }
+        }
+        return 2024;
+    }
 
-    private static int[] parseTime(String time) {
+    public double parseAmount(String value) {
+        return Double.parseDouble(value.replace("\"", "").replace(",", "").trim());
+    }
+
+    public static int[] parseTime(String time) {
         String[] parts = time.trim().split(":");
         return new int[]{
                 Integer.parseInt(parts[0].trim()),
@@ -20,7 +33,6 @@ public class TimeKeeper {
             int startDay,
             int endDay
     ) {
-
         double totalMinutesWorked = 0;
 
         for (String[] row : attendance) {
@@ -80,6 +92,7 @@ public class TimeKeeper {
         };
         return names[month];
     }
+
     public int getLastDayOfMonth(int month, int year) {
         if (month == 2) {
             boolean isLeapYear = (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0);

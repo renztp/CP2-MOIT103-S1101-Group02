@@ -1,4 +1,4 @@
-package shared;
+package models;
 
 public final class CSVColumnIndex {
     public static final int COL_EMP_ID      = 0;

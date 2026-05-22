@@ -1,6 +1,6 @@
 package core;
 
-import shared.CSVColumnIndex;
+import models.CSVColumnIndex;
 
 import java.io.*;
 import java.util.ArrayList;
