@@ -351,3 +351,5 @@ dist
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/jetbrains,netbeans,visualstudiocode,eclipse,node
+
+target
