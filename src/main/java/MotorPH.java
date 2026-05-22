@@ -1,5 +1,7 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -40,9 +42,9 @@ public class MotorPH {
     // ============================================================
     // MAIN — Login, then route to the correct menu
     // ============================================================
-    public static void main(String[] args) {
-        String employeeFile   = "Employee Details.csv";
-        String attendanceFile = "Attendance Record.csv";
+    public void main(String[] args) {
+        InputStream employeeFile   = getClass().getClassLoader().getResourceAsStream("Employee Details.csv");
+        InputStream attendanceFile = getClass().getClassLoader().getResourceAsStream("Attendance Record.csv");
 
         Scanner scanner = new Scanner(System.in);
 
@@ -487,8 +489,8 @@ public class MotorPH {
     // Loads the employee details CSV into a 2D array.
     // Uses regex to correctly split fields that contain commas inside quotes.
     // Strips surrounding quotes and whitespace from every field.
-    static String[][] loadEmployees(String filePath) throws Exception {
-        BufferedReader reader = new BufferedReader(new FileReader(filePath));
+    static String[][] loadEmployees(InputStream filePath) throws Exception {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(filePath));
         List<String[]> rows = new ArrayList<>();
         String line;
         boolean header = true;
@@ -518,8 +520,8 @@ public class MotorPH {
 
     // Loads the attendance CSV into a 2D array.
     // Attendance fields do not contain quoted commas, so a plain split is sufficient.
-    static String[][] loadAttendance(String filePath) throws Exception {
-        BufferedReader reader = new BufferedReader(new FileReader(filePath));
+    static String[][] loadAttendance(InputStream filePath) throws Exception {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(filePath));
         List<String[]> rows = new ArrayList<>();
         String line;
         boolean header = true;
