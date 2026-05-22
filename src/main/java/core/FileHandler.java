@@ -1,5 +1,7 @@
 package core;
 
+import models.CSVColumnIndex;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +48,7 @@ public class FileHandler {
                 }
 
                 // Remove comma separators from the hourly rate field (e.g. "1,250" → "1250").
-                columns[COL_HOURLY_RATE] = columns[COL_HOURLY_RATE].replace(",", "");
-
+                columns[CSVColumnIndex.COL_HOURLY_RATE] = columns[CSVColumnIndex.COL_HOURLY_RATE].replace(",", "");
                 rows.add(columns);
             }
         }
