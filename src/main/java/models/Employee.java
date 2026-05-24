@@ -14,7 +14,6 @@ public class Employee {
     private String lastName;
     private String firstName;
     private String position;
-    private String role;
 
     private double hourlyRate;
     private double riceSubsidy;
@@ -26,7 +25,6 @@ public class Employee {
             String lastName,
             String firstName,
             String position,
-            String role,
             double hourlyRate,
             double riceSubsidy,
             double phoneAllowance,
@@ -37,7 +35,6 @@ public class Employee {
         this.lastName = lastName;
         this.firstName = firstName;
         this.position = position;
-        this.role = role;
 
         this.hourlyRate = hourlyRate;
         this.riceSubsidy = riceSubsidy;
@@ -59,10 +56,6 @@ public class Employee {
 
     public String getPosition() {
         return position;
-    }
-
-    public String getRole() {
-        return role;
     }
 
     public double getHourlyRate() {
