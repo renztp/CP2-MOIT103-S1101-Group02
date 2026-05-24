@@ -7,8 +7,6 @@ import java.io.*;
 import java.util.*;
 
 public class FileHandler {
-    static final int COL_HOURLY_RATE = 18;
-
     // TODO: replace for Employee/AttendanceRecord classes and refactor code
     private String[][] attendance;
     private final LinkedHashMap<Integer, Employee> employees = new LinkedHashMap<>();
@@ -35,8 +33,7 @@ public class FileHandler {
                 Integer.parseInt(column[CSVColumnIndex.COL_EMP_ID]),
                 column[CSVColumnIndex.COL_LAST_NAME],
                 column[CSVColumnIndex.COL_FIRST_NAME],
-                column[CSVColumnIndex.COL_ROLE],
-                column[CSVColumnIndex.COL_ROLE],
+                column[CSVColumnIndex.COL_POSITION],
                 Double.parseDouble(column[CSVColumnIndex.COL_HOURLY_RATE]),
                 Double.parseDouble(column[CSVColumnIndex.COL_RICE_SUBSIDY]),
                 Double.parseDouble(column[CSVColumnIndex.COL_PHONE_ALLOWANCE]),
@@ -98,6 +95,10 @@ public class FileHandler {
         }
 
         attendance = rows.toArray(new String[0][]);
+    }
+
+    public void saveCachedEmployeesToCSV(LinkedHashMap<Integer, Employee> cachedEmployees) {
+        // Empty
     }
 
     public LinkedHashMap<Integer, Employee> getEmployeesRecords() { return employees; }
