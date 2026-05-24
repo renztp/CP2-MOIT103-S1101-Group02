@@ -512,6 +512,9 @@ public class MotorPH {
             columns[COL_HOURLY_RATE] = columns[COL_HOURLY_RATE].replace(",", "");
 
             rows.add(columns);
+            for(String column : columns) {
+                System.out.println(column);
+            }
         }
 
         reader.close();
