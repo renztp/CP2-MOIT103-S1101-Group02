@@ -1,10 +1,11 @@
 package core;
 
 import models.CSVColumnIndex;
+import models.Employee;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Array;
+import java.util.*;
 
 public class FileHandler {
     static final int COL_HOURLY_RATE = 18;
@@ -12,10 +13,11 @@ public class FileHandler {
     // TODO: replace for Employee/AttendanceRecord classes and refactor code
     private String[][] employees;
     private String[][] attendance;
+    private LinkedHashMap<Integer, Employee> allEmployees = new LinkedHashMap<>();
 
     public FileHandler() throws IOException {
         loadEmployeeRecords();
-        loadAttendanceRecords();
+//        loadAttendanceRecords();
     }
 
     private String removeQuotes(String column) {
@@ -24,6 +26,22 @@ public class FileHandler {
 
     private String[] splitCSVLine(String line) {
         return line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+    }
+
+    private void setEmployeeRecords(String[] column) {
+        Employee singleEmployee = new Employee(
+                Integer.parseInt(column[CSVColumnIndex.COL_EMP_ID]),
+                column[CSVColumnIndex.COL_LAST_NAME],
+                column[CSVColumnIndex.COL_FIRST_NAME],
+                column[CSVColumnIndex.COL_ROLE],
+                column[CSVColumnIndex.COL_ROLE],
+                Double.parseDouble(column[CSVColumnIndex.COL_HOURLY_RATE]),
+                Double.parseDouble(column[CSVColumnIndex.COL_RICE_SUBSIDY]),
+                Double.parseDouble(column[CSVColumnIndex.COL_PHONE_ALLOWANCE]),
+                Double.parseDouble(column[CSVColumnIndex.COL_CLOTHING_ALLOWANCE])
+        );
+        int empId = singleEmployee.getEmployeeNumber();
+        allEmployees.put(empId, singleEmployee);
     }
 
     private void loadEmployeeRecords() throws IOException {
@@ -50,6 +68,9 @@ public class FileHandler {
                 // Remove comma separators from the hourly rate field (e.g. "1,250" → "1250").
                 columns[CSVColumnIndex.COL_HOURLY_RATE] = columns[CSVColumnIndex.COL_HOURLY_RATE].replace(",", "");
                 rows.add(columns);
+                System.out.println(columns[CSVColumnIndex.COL_HOURLY_RATE]);
+                setEmployeeRecords(singleEmployee);
+//                allEmployees.add(columns);
             }
         }
         employees = rows.toArray(new String[0][]);
