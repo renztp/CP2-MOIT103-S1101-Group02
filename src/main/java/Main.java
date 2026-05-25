@@ -1,8 +1,8 @@
 import core.models.Attendance;
 import core.models.Employee;
-import core.services.AuthService;
-import core.services.FileStorage;
-import core.services.PayrollCalculator;
+import core.services.Authenticator;
+import core.services.FileHandler;
+import core.services.PayrollProcessor;
 import ui.EmployeePortalPanel;
 import ui.LoginPanel;
 import ui.MainFrame;
@@ -27,18 +27,18 @@ public class Main {
     private static EmployeePortalPanel employeePanel;
     private static StaffPortalPanel staffPanel;
 
-    private static AuthService authService;
-    private static FileStorage fileStorage;
-    private static PayrollCalculator payrollCalculator;
+    private static Authenticator authenticator;
+    private static FileHandler fileHandler;
+    private static PayrollProcessor payrollProcessor;
 
-    public static void main(String[] args) {
+    public void main(String[] args) {
         SwingUtilities.invokeLater(Main::buildAndLaunchApplication);
     }
 
     private static void buildAndLaunchApplication() {
-        authService = new AuthService();
-        fileStorage = new FileStorage();
-        payrollCalculator = new PayrollCalculator();
+        authenticator = new Authenticator();
+        fileHandler = new FileHandler();
+        payrollProcessor = new PayrollProcessor();
 
         applicationWindow = new MainFrame();
         loginPanel = new LoginPanel();
@@ -82,7 +82,7 @@ public class Main {
             return;
         }
 
-        if (!authService.validateUserCredentials(enteredUsername, enteredPassword)) {
+        if (!authenticator.validateUserCredentials(enteredUsername, enteredPassword)) {
             displayLoginError("Incorrect username or password.");
             loginPanel.getLoginPasswordField().setText("");
             return;
@@ -92,7 +92,7 @@ public class Main {
         loginPanel.getLoginUsernameField().setText("");
         loginPanel.getLoginPasswordField().setText("");
 
-        if (authService.isEmployeeRole(enteredUsername)) {
+        if (authenticator.isEmployeeRole(enteredUsername)) {
             initializeEmployeeIdSelector();
             applicationWindow.navigateTo(SCREEN_EMPLOYEE);
         } else {
@@ -109,7 +109,7 @@ public class Main {
         employeePanel.getEmpIdSelectorDropdown().removeAllItems();
 
         try {
-            List<Employee> employeeRecords = fileStorage.loadEmployees();
+            List<Employee> employeeRecords = fileHandler.loadEmployees();
             for (Employee employee : employeeRecords) {
                 employeePanel.getEmpIdSelectorDropdown().addItem(employee.getId());
             }
@@ -136,7 +136,7 @@ public class Main {
     private static void handleEmployeePayslipRequest() {
         String coverageInput = employeePanel.getEmpPayCoverageField().getText().trim();
 
-        if (!payrollCalculator.validateMonthInput(coverageInput)) {
+        if (!payrollProcessor.validateMonthInput(coverageInput)) {
             showWarningDialog("Pay Coverage must be a month number between 6 (June) and 12 (December).");
             return;
         }
@@ -150,17 +150,17 @@ public class Main {
         }
 
         try {
-            List<Attendance> attendanceRecords = fileStorage.loadAttendance();
-            List<Employee> employeeRecords = fileStorage.loadEmployees();
+            List<Attendance> attendanceRecords = fileHandler.loadAttendance();
+            List<Employee> employeeRecords = fileHandler.loadEmployees();
 
-            Employee matchedEmployee = fileStorage.findEmployeeById(employeeRecords, employeeId);
+            Employee matchedEmployee = fileHandler.findEmployeeById(employeeRecords, employeeId);
             if (matchedEmployee == null) {
                 showErrorDialog("Employee record not found in the file.");
                 return;
             }
 
-            int payrollYear = payrollCalculator.resolveYearFromAttendance(attendanceRecords, employeeId);
-            String payslipText = payrollCalculator.buildPayslipForEmployee(
+            int payrollYear = payrollProcessor.resolveYearFromAttendance(attendanceRecords, employeeId);
+            String payslipText = payrollProcessor.buildPayslipForEmployee(
                     matchedEmployee, attendanceRecords, selectedMonth, payrollYear);
 
             employeePanel.getEmpPayrollResultsArea().setText(payslipText);
@@ -172,7 +172,7 @@ public class Main {
 
     private static void handleLoadEmployeeRoster() {
         try {
-            List<Employee> employeeRecords = fileStorage.loadEmployees();
+            List<Employee> employeeRecords = fileHandler.loadEmployees();
             populateRosterTable(employeeRecords);
             updateStaffStatusLabel(employeeRecords.size() + " employees loaded. Double click rows to view profiles.");
         } catch (Exception loadException) {
@@ -191,16 +191,16 @@ public class Main {
         String selectedEmployeeId = staffPanel.getStaffRosterModel().getValueAt(selectedTableRow, 0).toString();
 
         try {
-            List<Employee> employeeRecords = fileStorage.loadEmployees();
-            List<Attendance> attendanceRecords = fileStorage.loadAttendance();
+            List<Employee> employeeRecords = fileHandler.loadEmployees();
+            List<Attendance> attendanceRecords = fileHandler.loadAttendance();
 
-            Employee matchedEmployee = fileStorage.findEmployeeById(employeeRecords, selectedEmployeeId);
+            Employee matchedEmployee = fileHandler.findEmployeeById(employeeRecords, selectedEmployeeId);
             if (matchedEmployee == null) {
                 showErrorDialog("Employee record not found.");
                 return;
             }
 
-            String payrollReport = payrollCalculator.buildFullPayrollReportForEmployee(
+            String payrollReport = payrollProcessor.buildFullPayrollReportForEmployee(
                     matchedEmployee, attendanceRecords);
             staffPanel.getStaffPayrollResultsArea().setText(payrollReport);
             staffPanel.getStaffPayrollResultsArea().setCaretPosition(0);
@@ -212,8 +212,8 @@ public class Main {
 
     private static void handleAllEmployeesPayrollRequest() {
         try {
-            List<Employee> employeeRecords = fileStorage.loadEmployees();
-            List<Attendance> attendanceRecords = fileStorage.loadAttendance();
+            List<Employee> employeeRecords = fileHandler.loadEmployees();
+            List<Attendance> attendanceRecords = fileHandler.loadAttendance();
 
             if (employeeRecords.isEmpty()) {
                 showWarningDialog("No employee records found. Please load the roster first.");
@@ -221,7 +221,7 @@ public class Main {
             }
 
             String combinedReport = employeeRecords.stream()
-                    .map(employee -> payrollCalculator.buildFullPayrollReportForEmployee(employee, attendanceRecords))
+                    .map(employee -> payrollProcessor.buildFullPayrollReportForEmployee(employee, attendanceRecords))
                     .collect(Collectors.joining("\n\n" + "=".repeat(55) + "\n\n"));
 
             staffPanel.getStaffPayrollResultsArea().setText(combinedReport);
@@ -241,8 +241,8 @@ public class Main {
         String selectedEmployeeId = staffPanel.getStaffRosterModel().getValueAt(selectedTableRow, 0).toString();
 
         try {
-            List<Employee> employeeRecords = fileStorage.loadEmployees();
-            Employee employee = fileStorage.findEmployeeById(employeeRecords, selectedEmployeeId);
+            List<Employee> employeeRecords = fileHandler.loadEmployees();
+            Employee employee = fileHandler.findEmployeeById(employeeRecords, selectedEmployeeId);
 
             if (employee == null) {
                 showErrorDialog("Details could not be fetched for this record.");
@@ -286,8 +286,8 @@ public class Main {
 
     private static void populateEmployeePanelForUser(String targetEmployeeId) {
         try {
-            List<Employee> employeeRecords = fileStorage.loadEmployees();
-            Employee matchedEmployee = fileStorage.findEmployeeById(employeeRecords, targetEmployeeId);
+            List<Employee> employeeRecords = fileHandler.loadEmployees();
+            Employee matchedEmployee = fileHandler.findEmployeeById(employeeRecords, targetEmployeeId);
 
             if (matchedEmployee != null) {
                 employeePanel.getEmpNumberDisplayLabel().setText(matchedEmployee.getId());

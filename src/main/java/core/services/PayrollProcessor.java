@@ -7,7 +7,7 @@ import core.models.PayrollBreakdown;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class PayrollCalculator {
+public class PayrollProcessor {
 
     public static final int PAYROLL_MONTH_START = 6;
     public static final int PAYROLL_MONTH_END = 12;
@@ -16,32 +16,6 @@ public class PayrollCalculator {
     private static final int WORK_END_MINUTES = 17 * 60;
     private static final int GRACE_PERIOD_END_MINUTES = 8 * 60 + 10;
     private static final int LUNCH_BREAK_MINUTES = 60;
-
-    private static final double SSS_BRACKET_BASE_SALARY = 3250.0;
-    private static final double SSS_BRACKET_STEP = 500.0;
-    private static final double SSS_BRACKET_BASE_CONTRIBUTION = 157.5;
-    private static final double SSS_BRACKET_STEP_AMOUNT = 22.5;
-    private static final double SSS_MINIMUM_SALARY = 3250.0;
-    private static final double SSS_MINIMUM_CONTRIBUTION = 135.0;
-    private static final double SSS_MAXIMUM_SALARY = 24750.0;
-    private static final double SSS_MAXIMUM_CONTRIBUTION = 1125.0;
-
-    private static final double PHILHEALTH_RATE = 0.03;
-    private static final double PHILHEALTH_MINIMUM_SALARY = 10000.0;
-    private static final double PHILHEALTH_MINIMUM_PREMIUM = 150.0;
-    private static final double PHILHEALTH_MAXIMUM_SALARY = 60000.0;
-    private static final double PHILHEALTH_MAXIMUM_PREMIUM = 900.0;
-
-    private static final double PAGIBIG_LOW_RATE = 0.01;
-    private static final double PAGIBIG_HIGH_RATE = 0.02;
-    private static final double PAGIBIG_LOW_SALARY_THRESHOLD = 1500.0;
-    private static final double PAGIBIG_MAXIMUM_CONTRIBUTION = 100.0;
-
-    private static final double TAX_BRACKET_1_MAX = 20832.0;
-    private static final double TAX_BRACKET_2_MAX = 33332.0;
-    private static final double TAX_BRACKET_3_MAX = 66666.0;
-    private static final double TAX_BRACKET_4_MAX = 166666.0;
-    private static final double TAX_BRACKET_5_MAX = 666666.0;
 
     public static final String PAYSLIP_SEPARATOR_MAJOR = "=".repeat(55);
     public static final String PAYSLIP_SEPARATOR_MINOR = "-".repeat(55);
@@ -120,15 +94,15 @@ public class PayrollCalculator {
         double secondCutoffGross = secondCutoffHours * hourlyRate;
         double totalMonthlyGross = firstCutoffGross + secondCutoffGross;
 
-        double sssContribution = (totalMonthlyGross > 0) ? computeSSSContribution(totalMonthlyGross) : 0.0;
+        double sssContribution = (totalMonthlyGross > 0) ? DeductionCalculator.computeSSSContribution(totalMonthlyGross) : 0.0;
         double philHealthContribution = (totalMonthlyGross > 0)
-                ? computePhilHealthContribution(totalMonthlyGross) : 0.0;
+                ? DeductionCalculator.computePhilHealthContribution(totalMonthlyGross) : 0.0;
         double pagIbigContribution = (totalMonthlyGross > 0)
-                ? computePagIbigContribution(totalMonthlyGross) : 0.0;
+                ? DeductionCalculator.computePagIbigContribution(totalMonthlyGross) : 0.0;
 
         double totalGovernmentDeductions = sssContribution + philHealthContribution + pagIbigContribution;
         double taxableIncome = totalMonthlyGross - totalGovernmentDeductions;
-        double withholdingTax = (taxableIncome > 0) ? computeWithholdingTax(taxableIncome) : 0.0;
+        double withholdingTax = (taxableIncome > 0) ? DeductionCalculator.computeWithholdingTax(taxableIncome) : 0.0;
 
         double totalDeductions = totalGovernmentDeductions + withholdingTax;
         double firstCutoffNetPay = firstCutoffGross;
@@ -255,53 +229,6 @@ public class PayrollCalculator {
         block.append(String.format("      Total Deductions : %s%n", payrollValues.getTotalDeductions()));
 
         return block.toString();
-    }
-
-    private double computeSSSContribution(double grossSalary) {
-        if (grossSalary < SSS_MINIMUM_SALARY) {
-            return SSS_MINIMUM_CONTRIBUTION;
-        }
-        if (grossSalary >= SSS_MAXIMUM_SALARY) {
-            return SSS_MAXIMUM_CONTRIBUTION;
-        }
-        int salaryBracket = (int) ((grossSalary - SSS_BRACKET_BASE_SALARY) / SSS_BRACKET_STEP);
-        return SSS_BRACKET_BASE_CONTRIBUTION + salaryBracket * SSS_BRACKET_STEP_AMOUNT;
-    }
-
-    private double computePhilHealthContribution(double grossSalary) {
-        if (grossSalary <= PHILHEALTH_MINIMUM_SALARY) {
-            return PHILHEALTH_MINIMUM_PREMIUM;
-        }
-        if (grossSalary >= PHILHEALTH_MAXIMUM_SALARY) {
-            return PHILHEALTH_MAXIMUM_PREMIUM;
-        }
-        return (grossSalary * PHILHEALTH_RATE) / 2.0;
-    }
-
-    private double computePagIbigContribution(double grossSalary) {
-        double contributionRate = (grossSalary <= PAGIBIG_LOW_SALARY_THRESHOLD)
-                ? PAGIBIG_LOW_RATE
-                : PAGIBIG_HIGH_RATE;
-        return Math.min(grossSalary * contributionRate, PAGIBIG_MAXIMUM_CONTRIBUTION);
-    }
-
-    private double computeWithholdingTax(double taxableIncome) {
-        if (taxableIncome <= TAX_BRACKET_1_MAX) {
-            return 0.0;
-        }
-        if (taxableIncome <= TAX_BRACKET_2_MAX) {
-            return (taxableIncome - 20833) * 0.20;
-        }
-        if (taxableIncome <= TAX_BRACKET_3_MAX) {
-            return 2500.0 + (taxableIncome - 33333) * 0.25;
-        }
-        if (taxableIncome <= TAX_BRACKET_4_MAX) {
-            return 10833.0 + (taxableIncome - 66667) * 0.30;
-        }
-        if (taxableIncome <= TAX_BRACKET_5_MAX) {
-            return 40833.33 + (taxableIncome - 166667) * 0.32;
-        }
-        return 200833.33 + (taxableIncome - 666677) * 0.35;
     }
 
     private int[] parseTimeToHoursMinutes(String timeString) {

@@ -4,7 +4,6 @@ import core.models.Attendance;
 import core.models.Employee;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
@@ -12,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class FileStorage {
+public class FileHandler {
 
     public static final String EMPLOYEE_FILE_PATH = "Employee Details.csv";
     public static final String ATTENDANCE_FILE_PATH = "Attendance Record.csv";

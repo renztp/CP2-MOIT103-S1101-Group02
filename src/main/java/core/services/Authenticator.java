@@ -1,6 +1,6 @@
 package core.services;
 
-public class AuthService {
+public class Authenticator {
 
     public static final String ROLE_EMPLOYEE = "employee";
     public static final String ROLE_PAYROLL_STAFF = "payroll_staff";
