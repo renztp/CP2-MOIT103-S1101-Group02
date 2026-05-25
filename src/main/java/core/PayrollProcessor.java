@@ -10,8 +10,8 @@ public class PayrollProcessor {
 
     public void processPayroll(Employee employee) {
 
-        double hoursWorked =
-                employee.getHoursWorked();
+        // Temporary hardcoded hours for testing
+        double hoursWorked = 160;
 
         double hourlyRate =
                 employee.getHourlyRate();
@@ -47,15 +47,45 @@ public class PayrollProcessor {
         System.out.println("===== PAYROLL =====");
 
         System.out.println(
-                "Employee: "
+                "Employee Number: "
+                + employee.getEmployeeNumber()
+        );
+
+        System.out.println(
+                "Employee Name: "
                 + employee.getFirstName()
                 + " "
                 + employee.getLastName()
         );
 
         System.out.println(
+                "Position: "
+                + employee.getPosition()
+        );
+
+        System.out.println(
                 "Gross Salary: "
                 + grossSalary
+        );
+
+        System.out.println(
+                "SSS: "
+                + sss
+        );
+
+        System.out.println(
+                "PhilHealth: "
+                + philHealth
+        );
+
+        System.out.println(
+                "Pag-IBIG: "
+                + pagIbig
+        );
+
+        System.out.println(
+                "Withholding Tax: "
+                + withholdingTax
         );
 
         System.out.println(
