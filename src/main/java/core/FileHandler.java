@@ -4,7 +4,13 @@ import models.CSVColumnIndex;
 import models.Employee;
 
 import java.io.*;
+
 import java.util.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.io.File;
+
 
 public class FileHandler {
     // TODO: replace for Employee/AttendanceRecord classes and refactor code
@@ -103,4 +109,30 @@ public class FileHandler {
 
     public LinkedHashMap<Integer, Employee> getEmployeesRecords() { return employees; }
     public String[][] getAttendanceRecords() { return attendance; }
+   public void addEmployeeRecord(
+
+        String empNo,
+        String lastName,
+        String firstName,
+        String sss,
+        String philHealth,
+        String tin,
+        String pagIbig
+) throws IOException {
+
+    FileWriter writer = new FileWriter(
+            "Employee Details.csv", true);
+
+    writer.write(
+            empNo + "," +
+            lastName + "," +
+            firstName + "," +
+            sss + "," +
+            philHealth + "," +
+            tin + "," +
+            pagIbig + "\n"
+    );
+
+    writer.close();
+}
 }
