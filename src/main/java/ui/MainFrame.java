@@ -14,8 +14,8 @@ import java.awt.event.MouseEvent;
 
 public class MainFrame extends JFrame {
 
-    public static final int WINDOW_WIDTH = 1000;
-    public static final int WINDOW_HEIGHT = 680;
+    public static final int WINDOW_WIDTH = 1100;
+    public static final int WINDOW_HEIGHT = 720;
 
     public static final Color COLOR_BACKGROUND = new Color(15, 23, 42);
     public static final Color COLOR_SURFACE = new Color(30, 41, 59);
@@ -83,6 +83,23 @@ public class MainFrame extends JFrame {
         field.setBackground(COLOR_INPUT_BACKGROUND);
         field.setForeground(COLOR_TEXT_PRIMARY);
         field.setCaretColor(COLOR_TEXT_PRIMARY);
+        field.setBorder(new CompoundBorder(
+                new LineBorder(COLOR_BORDER, 1, true),
+                new EmptyBorder(6, 10, 6, 10)
+        ));
+    }
+
+    // Switches a field's border to red so the user can see which one failed validation.
+    // Call clearFieldHighlight on the same field afterward to remove it.
+    public static void markFieldInvalid(JTextComponent field) {
+        field.setBorder(new CompoundBorder(
+                new LineBorder(COLOR_ACCENT_DANGER, 1, true),
+                new EmptyBorder(6, 10, 6, 10)
+        ));
+    }
+
+    // Resets a field's border back to normal without touching its font, colors, or editable state.
+    public static void clearFieldHighlight(JTextComponent field) {
         field.setBorder(new CompoundBorder(
                 new LineBorder(COLOR_BORDER, 1, true),
                 new EmptyBorder(6, 10, 6, 10)

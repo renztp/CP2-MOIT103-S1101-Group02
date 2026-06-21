@@ -44,7 +44,7 @@ public class LoginPanel extends JPanel {
 
         cardConstraints.gridy = 2;
         loginCard.add(MainFrame.createLabel(
-                "Username", MainFrame.FONT_UI, Font.PLAIN, 12, MainFrame.COLOR_TEXT_SECONDARY), cardConstraints);
+                "Username / Employee Number", MainFrame.FONT_UI, Font.PLAIN, 12, MainFrame.COLOR_TEXT_SECONDARY), cardConstraints);
         loginUsernameField = MainFrame.createStyledTextField();
         cardConstraints.gridy = 3;
         loginCard.add(loginUsernameField, cardConstraints);
