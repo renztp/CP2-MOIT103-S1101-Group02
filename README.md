@@ -10,8 +10,9 @@ MotorPH Payroll System is a local desktop application that helps manage employee
 
 - **Employee roster** — Staff loads the roster table via **Load Roster**; double-click a row to view the full employee profile.
 - **Search** — Filter employees by employee number, first or last name, or position (case-insensitive).
-- **Add / Edit / Delete** — Create, update, or remove employee records through a form dialog; changes persist to the employee CSV.
-- **Salary & payslip computation** — Employees view a single-month payslip; staff generate per-employee or all-employee payroll reports; **Compute Salaries** runs batch computation and saves results to CSV.
+- **Add / Edit / Delete** — Create, update, or remove employee records through a form dialog with a locked employee-number identifier on edit and a confirmation prompt on delete; changes persist to the employee CSV.
+- **Salary & payslip computation** — Employees view a single-month payslip; staff generate per-employee or all-employee payroll reports; **Compute Salaries** runs batch computation for one selected pay-period month (6–12) and saves results to CSV.
+- **Payroll summary** — **Generate Summary** shows, for the same selected pay-period month, the number of employees, total gross pay, total deductions, and average net pay in a read-only dialog.
 - **Role-based login** — Payroll staff and employees sign in with different credentials and are routed to separate portals.
 - **Payroll reports** — On-screen text reports in the staff portal for a selected employee or all employees.
 
@@ -41,7 +42,7 @@ src/main/resources/
 ```
 
 - **`core/models`** — Data classes representing employees, attendance rows, and payroll breakdowns.
-- **`core/services`** — Business logic for file I/O, authentication, payroll processing, salary computation, and deductions.
+- **`core/services`** — Business logic for file I/O, authentication, payroll processing, salary computation (including the payroll summary aggregation, `SalaryComputationModule.generateSummary`), and deductions.
 - **`ui`** — Swing panels and dialogs for login, staff and employee portals, and the employee form.
 - **`Main.java`** — Application entry point that connects UI actions to service methods.
 
@@ -66,6 +67,16 @@ java -cp target/classes Main
 
 Employees log in using their **Employee Number** in the username field. The password is shared for all employees in this version.
 
+## Compute Salaries & Payroll Summary
+
+Both **Compute Salaries** and **Generate Summary** operate on the single pay-period month typed into the **Pay Period (6-12)** field on the staff toolbar:
+
+1. Load the roster (or use it already loaded).
+2. Type the target month number (`6`–`12`) into the Pay Period field.
+3. Click **Compute Salaries** to compute each employee's days worked, gross pay, and deductions for that month only, display the results, and save them to the employee CSV — or click **Generate Summary** to see the aggregated totals (employee count, total gross pay, total deductions, average net pay) for that same month in a dialog, without touching the CSV.
+
+Scoping both actions to one month matters because SSS, PhilHealth, Pag-IBIG, and withholding tax are all *monthly* contribution brackets; computing them against a multi-month gross figure would apply the wrong ceiling and produce an incorrect payroll.
+
 ## Data Files Note
 
 Bundled CSV templates live in `src/main/resources/`:
@@ -80,9 +91,9 @@ On first run, the application creates `~/MotorPH-Data/` in the user's home direc
 - The roster is not auto-loaded on staff login — click **Load Roster** manually.
 - No auto-refresh if CSV files are edited externally while the app is running; the employee list is cached in memory.
 - Attendance data is read-only in the UI; deleting an employee does not remove their attendance rows.
-- Payroll coverage is limited to months 6–12 (June through December).
-- Payslip reports and **Compute Salaries** use different calculation models and may produce different figures.
-- Payroll reports display on-screen only; only **Compute Salaries** writes salary fields back to the employee CSV.
+- Payroll coverage is limited to months 6–12 (June through December); **Compute Salaries** and **Generate Summary** compute one selected month at a time rather than the whole June–December range in a single run.
+- Payslip reports (cutoff-based, using hours actually logged in and out) and **Compute Salaries** (day-based, using a flat 8-hour day for every day attended) use different calculation models and may produce different figures for the same month.
+- Payroll reports and the payroll summary display on-screen only; only **Compute Salaries** writes salary fields back to the employee CSV. **Generate Summary** is read-only and does not modify the CSV.
 - A shared password (`12345`) is used for staff and all employees — not suitable for production use.
 - The window size is fixed; there are no automated tests in the repository.
 

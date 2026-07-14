@@ -23,10 +23,15 @@ public class StaffPortalPanel extends JPanel {
     private final JButton singlePayslipButton;
     private final JButton allEmployeesPayrollButton;
     private final JButton computeSalariesButton;
+    private final JButton generateSummaryButton;
     private final JButton addEmployeeButton;
     private final JButton editEmployeeButton;
     private final JButton deleteEmployeeButton;
     private final JButton logoutButton;
+
+    // Shared pay-period input used by both Compute Salaries and Generate Summary,
+    // since both operate on a single pay-period month (6-12).
+    private final JTextField payPeriodField;
 
     // Search field
     private final JTextField searchField;
@@ -105,14 +110,21 @@ public class StaffPortalPanel extends JPanel {
         singlePayslipButton = MainFrame.createStyledButton("Selected Payslip", MainFrame.COLOR_ACCENT_SUCCESS);
         allEmployeesPayrollButton = MainFrame.createStyledButton("All-Employee Payroll", MainFrame.COLOR_ACCENT_WARNING);
         computeSalariesButton = MainFrame.createStyledButton("Compute Salaries", MainFrame.COLOR_ACCENT_SUCCESS);
+        generateSummaryButton = MainFrame.createStyledButton("Generate Summary", MainFrame.COLOR_ACCENT_PRIMARY);
         addEmployeeButton = MainFrame.createStyledButton("Add", MainFrame.COLOR_ACCENT_SUCCESS);
         editEmployeeButton = MainFrame.createStyledButton("Edit", MainFrame.COLOR_ACCENT_PRIMARY);
         deleteEmployeeButton = MainFrame.createStyledButton("Delete", MainFrame.COLOR_ACCENT_DANGER);
         logoutButton = MainFrame.createStyledButton("Log Out", MainFrame.COLOR_ACCENT_DANGER);
 
+        payPeriodField = MainFrame.createStyledTextField();
+        payPeriodField.setToolTipText("Month number 6 (June) through 12 (December)");
+        payPeriodField.setPreferredSize(new Dimension(40, 26));
+        payPeriodField.setHorizontalAlignment(JTextField.CENTER);
+
         JButton[] toolbarButtons = {
                 loadRosterButton, addEmployeeButton, editEmployeeButton, deleteEmployeeButton,
-                singlePayslipButton, allEmployeesPayrollButton, computeSalariesButton, logoutButton
+                singlePayslipButton, allEmployeesPayrollButton, computeSalariesButton,
+                generateSummaryButton, logoutButton
         };
         for (JButton button : toolbarButtons) {
             button.setBorder(new EmptyBorder(5, 12, 5, 12));
@@ -131,7 +143,11 @@ public class StaffPortalPanel extends JPanel {
         JPanel payrollActionsRow = MainFrame.createStyledPanel(new FlowLayout(FlowLayout.LEFT, 6, 4), MainFrame.COLOR_BACKGROUND);
         payrollActionsRow.add(singlePayslipButton);
         payrollActionsRow.add(allEmployeesPayrollButton);
+        payrollActionsRow.add(MainFrame.createLabel(
+                "Pay Period (6-12):", MainFrame.FONT_UI, Font.PLAIN, 11, MainFrame.COLOR_TEXT_SECONDARY));
+        payrollActionsRow.add(payPeriodField);
         payrollActionsRow.add(computeSalariesButton);
+        payrollActionsRow.add(generateSummaryButton);
 
         JPanel payrollRowAndLogout = MainFrame.createStyledPanel(new BorderLayout(6, 0), MainFrame.COLOR_BACKGROUND);
         payrollRowAndLogout.add(payrollActionsRow, BorderLayout.CENTER);
@@ -180,6 +196,14 @@ public class StaffPortalPanel extends JPanel {
 
     public JButton getComputeSalariesButton() {
         return computeSalariesButton;
+    }
+
+    public JButton getGenerateSummaryButton() {
+        return generateSummaryButton;
+    }
+
+    public JTextField getPayPeriodField() {
+        return payPeriodField;
     }
 
     public JButton getAddEmployeeButton() {

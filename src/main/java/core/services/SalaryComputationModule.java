@@ -17,15 +17,32 @@ public class SalaryComputationModule {
         return employee.getHourlyRate() * HOURS_PER_WORK_DAY;
     }
 
-    // Counts how many unique attendance days an employee has logged.
-    public static int countDaysWorked(List<Attendance> attendanceRecords, String employeeId) {
+    // Counts how many unique attendance days an employee has logged within a single
+    // target month (6-12). Scoping to one month keeps this consistent with the monthly
+    // contribution ceilings applied later (SSS/PhilHealth/Pag-IBIG/tax are all monthly
+    // brackets, so the gross pay they are applied to must also be a single month's pay).
+    public static int countDaysWorked(List<Attendance> attendanceRecords, String employeeId, int targetMonth) {
         HashSet<String> uniqueDates = new HashSet<>();
         for (Attendance record : attendanceRecords) {
-            if (record.getEmpId().equals(employeeId)) {
+            if (record.getEmpId().equals(employeeId) && extractMonth(record.getDate()) == targetMonth) {
                 uniqueDates.add(record.getDate().trim());
             }
         }
         return uniqueDates.size();
+    }
+
+    // Reads the month component (e.g. "6" from "6/14/2024") out of an attendance date string.
+    // Returns -1 for malformed dates so they simply fail the month-equality check above.
+    private static int extractMonth(String date) {
+        String[] parts = date.split("/");
+        if (parts.length < 1) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(parts[0].trim());
+        } catch (NumberFormatException ex) {
+            return -1;
+        }
     }
 
     // Checks if a text value can be converted to a valid number.
@@ -164,8 +181,11 @@ public class SalaryComputationModule {
         return netPay;
     }
 
-    // Runs the full salary computation flow for all employees.
-    public static SalaryResult computeAllSalaries(List<Employee> employees, List<Attendance> attendanceRecords) {
+    // Runs the full salary computation flow for all employees, scoped to a single
+    // pay-period month (6-12). Scoping to one month is what keeps grossPay consistent
+    // with the monthly SSS/PhilHealth/Pag-IBIG/withholding-tax brackets applied to it.
+    public static SalaryResult computeAllSalaries(
+            List<Employee> employees, List<Attendance> attendanceRecords, int targetMonth) {
         int count = employees.size();
 
         String[] employeeIds = new String[count];
@@ -176,7 +196,7 @@ public class SalaryComputationModule {
             Employee employee = employees.get(i);
             employeeIds[i] = employee.getId();
             ratePerDay[i] = getRatePerDay(employee);
-            daysWorked[i] = countDaysWorked(attendanceRecords, employee.getId());
+            daysWorked[i] = countDaysWorked(attendanceRecords, employee.getId(), targetMonth);
         }
 
         String validationError = validateSalaryInputs(ratePerDay, daysWorked, employeeIds);
@@ -209,9 +229,9 @@ public class SalaryComputationModule {
     }
 
     // Builds a simple text report for the GUI results area.
-    public static String buildSalaryReport(SalaryResult result, List<Employee> employees) {
+    public static String buildSalaryReport(SalaryResult result, List<Employee> employees, String monthName) {
         StringBuilder report = new StringBuilder();
-        report.append("SALARY COMPUTATION RESULTS\n");
+        report.append("SALARY COMPUTATION RESULTS - ").append(monthName.toUpperCase()).append("\n");
         report.append("=".repeat(55)).append("\n\n");
 
         for (int i = 0; i < result.employeeIds.length; i++) {
@@ -267,6 +287,85 @@ public class SalaryComputationModule {
         public static SalaryResult failed(String errorMessage) {
             return new SalaryResult(false, errorMessage, null, null, null, null,
                     null, null, null, null, null, null);
+        }
+    }
+
+    // Feature 5 - Payroll Summary Display.
+    // Reuses computeAllSalaries() (the same gross pay and deduction routines built for
+    // Feature 3) so the summary totals are always consistent with the per-employee
+    // salary computation results, rather than being calculated a second, separate way.
+    public static SummaryResult generateSummary(
+            List<Employee> employees, List<Attendance> attendanceRecords, int targetMonth) {
+
+        if (employees == null || employees.isEmpty()) {
+            return SummaryResult.failed(
+                    "No employee data is loaded. Please load the employee roster first.");
+        }
+
+        String numericValidationError = validateEmployeeNumericFields(employees);
+        if (numericValidationError != null) {
+            return SummaryResult.failed(numericValidationError);
+        }
+
+        SalaryResult salaryResult = computeAllSalaries(employees, attendanceRecords, targetMonth);
+        if (!salaryResult.success) {
+            return SummaryResult.failed(salaryResult.errorMessage);
+        }
+
+        int employeeCount = salaryResult.employeeIds.length;
+        double totalGrossPay = sumArray(salaryResult.grossPay);
+        double totalDeductions = sumArray(salaryResult.totalDeductions);
+        double totalNetPay = sumArray(salaryResult.netPay);
+        double averageNetPay = (employeeCount > 0) ? (totalNetPay / employeeCount) : 0.0;
+
+        return new SummaryResult(true, null, targetMonth, employeeCount, totalGrossPay, totalDeductions, averageNetPay);
+    }
+
+    private static double sumArray(double[] values) {
+        double total = 0.0;
+        for (double value : values) {
+            total += value;
+        }
+        return total;
+    }
+
+    // Builds a simple, read-only-friendly text report for the payroll summary dialog.
+    public static String buildSummaryReport(SummaryResult result, String monthName) {
+        StringBuilder report = new StringBuilder();
+        report.append("PAYROLL SUMMARY - ").append(monthName.toUpperCase()).append("\n");
+        report.append("=".repeat(40)).append("\n\n");
+        report.append(String.format("Total Employees   : %d%n", result.employeeCount));
+        report.append(String.format("Total Gross Pay    : PHP %,.2f%n", result.totalGrossPay));
+        report.append(String.format("Total Deductions   : PHP %,.2f%n", result.totalDeductions));
+        report.append(String.format("Average Net Pay    : PHP %,.2f%n", result.averageNetPay));
+        report.append("\n").append("-".repeat(40)).append("\n");
+        report.append("Average net pay = total net pay / total number of employees.\n");
+        return report.toString();
+    }
+
+    // Holds the aggregated figures for one payroll summary run.
+    public static class SummaryResult {
+        public final boolean success;
+        public final String errorMessage;
+        public final int targetMonth;
+        public final int employeeCount;
+        public final double totalGrossPay;
+        public final double totalDeductions;
+        public final double averageNetPay;
+
+        public SummaryResult(boolean success, String errorMessage, int targetMonth, int employeeCount,
+                              double totalGrossPay, double totalDeductions, double averageNetPay) {
+            this.success = success;
+            this.errorMessage = errorMessage;
+            this.targetMonth = targetMonth;
+            this.employeeCount = employeeCount;
+            this.totalGrossPay = totalGrossPay;
+            this.totalDeductions = totalDeductions;
+            this.averageNetPay = averageNetPay;
+        }
+
+        public static SummaryResult failed(String errorMessage) {
+            return new SummaryResult(false, errorMessage, 0, 0, 0, 0, 0);
         }
     }
 }

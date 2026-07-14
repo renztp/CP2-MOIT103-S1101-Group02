@@ -69,6 +69,7 @@ public class Main {
         staffPanel.getSinglePayslipButton().addActionListener(e -> handleSingleEmployeePayrollRequest());
         staffPanel.getAllEmployeesPayrollButton().addActionListener(e -> handleAllEmployeesPayrollRequest());
         staffPanel.getComputeSalariesButton().addActionListener(e -> handleComputeSalaries());
+        staffPanel.getGenerateSummaryButton().addActionListener(e -> handleGenerateSummary());
         staffPanel.getLogoutButton().addActionListener(e -> handleLogout());
 
         // Staff portal - CRUD actions
@@ -278,8 +279,19 @@ public class Main {
         }
     }
 
-    // Feature 3 - Computes salaries for all employees, displays results, and saves to CSV.
+    // Feature 3 - Computes salaries for all employees for one pay-period month,
+    // displays results, and saves to CSV. Scoped to a single month (6-12) because the
+    // government contribution tables (SSS/PhilHealth/Pag-IBIG) and withholding tax are
+    // all monthly brackets; summing attendance across several months before applying
+    // those monthly ceilings would understate deductions and produce an incorrect payroll.
     private static void handleComputeSalaries() {
+        String coverageInput = staffPanel.getPayPeriodField().getText().trim();
+        if (!payrollProcessor.validateMonthInput(coverageInput)) {
+            showWarningDialog("Pay Period must be a month number between 6 (June) and 12 (December).");
+            return;
+        }
+        int targetMonth = Integer.parseInt(coverageInput);
+
         try {
             List<Employee> employeeRecords = fileHandler.loadEmployees();
             List<Attendance> attendanceRecords = fileHandler.loadAttendance();
@@ -296,29 +308,80 @@ public class Main {
             }
 
             SalaryComputationModule.SalaryResult result =
-                    SalaryComputationModule.computeAllSalaries(employeeRecords, attendanceRecords);
+                    SalaryComputationModule.computeAllSalaries(employeeRecords, attendanceRecords, targetMonth);
 
             if (!result.success) {
                 showWarningDialog(result.errorMessage);
                 return;
             }
 
-            String salaryReport = SalaryComputationModule.buildSalaryReport(result, employeeRecords);
+            String monthName = payrollProcessor.resolveMonthName(targetMonth);
+            String salaryReport = SalaryComputationModule.buildSalaryReport(result, employeeRecords, monthName);
             staffPanel.getStaffPayrollResultsArea().setText(salaryReport);
             staffPanel.getStaffPayrollResultsArea().setCaretPosition(0);
 
             fileHandler.saveSalaryResults(result);
 
-            updateStaffStatusLabel("Salaries computed for " + employeeRecords.size() + " employees.");
+            updateStaffStatusLabel("Salaries computed for " + employeeRecords.size() + " employees (" + monthName + ").");
 
             JOptionPane.showMessageDialog(
                     applicationWindow,
-                    "Salary results were generated and saved to the employee CSV file.",
+                    "Salary results for " + monthName + " were generated and saved to the employee CSV file.",
                     "Computation Complete",
                     JOptionPane.INFORMATION_MESSAGE
             );
         } catch (Exception ex) {
             showErrorDialog("Failed to compute salaries: " + ex.getMessage());
+        }
+    }
+
+    // Feature 5 - Builds and displays a simple payroll summary (employee count, total
+    // gross pay, total deductions, average net pay) for one pay-period month.
+    // Reuses SalaryComputationModule.computeAllSalaries (Feature 3) internally so the
+    // totals always agree with the per-employee salary computation results.
+    private static void handleGenerateSummary() {
+        String coverageInput = staffPanel.getPayPeriodField().getText().trim();
+        if (!payrollProcessor.validateMonthInput(coverageInput)) {
+            showWarningDialog("Pay Period must be a month number between 6 (June) and 12 (December).");
+            return;
+        }
+        int targetMonth = Integer.parseInt(coverageInput);
+
+        try {
+            List<Employee> employeeRecords = fileHandler.loadEmployees();
+            if (employeeRecords.isEmpty()) {
+                showWarningDialog("No employee records found. Please load the employee roster first.");
+                return;
+            }
+            List<Attendance> attendanceRecords = fileHandler.loadAttendance();
+
+            SalaryComputationModule.SummaryResult summary =
+                    SalaryComputationModule.generateSummary(employeeRecords, attendanceRecords, targetMonth);
+
+            if (!summary.success) {
+                showWarningDialog(summary.errorMessage);
+                return;
+            }
+
+            String monthName = payrollProcessor.resolveMonthName(targetMonth);
+            String summaryText = SalaryComputationModule.buildSummaryReport(summary, monthName);
+
+            JTextArea summaryTextArea = MainFrame.createStyledTextArea(summaryText);
+            summaryTextArea.setFont(new Font(MainFrame.FONT_MONO, Font.PLAIN, 13));
+            JScrollPane summaryScrollPane = MainFrame.createStyledScrollPane(summaryTextArea);
+            summaryScrollPane.setPreferredSize(new Dimension(420, 220));
+
+            JOptionPane.showMessageDialog(
+                    applicationWindow,
+                    summaryScrollPane,
+                    "Payroll Summary - " + monthName,
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+            updateStaffStatusLabel(
+                    "Payroll summary generated for " + monthName + " (" + summary.employeeCount + " employees).");
+        } catch (Exception ex) {
+            showErrorDialog("Failed to generate payroll summary: " + ex.getMessage());
         }
     }
 
